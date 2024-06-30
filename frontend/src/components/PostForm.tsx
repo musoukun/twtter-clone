@@ -27,10 +27,6 @@ const PostForm: React.FC = () => {
 			setContent("");
 		} catch (error) {
 			console.error("Error creating post:", error);
-			if (axios.isAxiosError(error) && error.response?.status === 401) {
-				console.log("Authentication failed. Please login again.");
-				// ここでログアウト処理やログインページへのリダイレクトを行うことができます
-			}
 		}
 	};
 

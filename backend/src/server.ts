@@ -7,7 +7,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth";
 import postRoutes from "./routes/posts";
 import userRoutes from "./routes/users";
-
+import searchRoutes from "./routes/search";
 dotenv.config();
 
 const app = express();
@@ -35,6 +35,7 @@ mongoose
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/search", searchRoutes); // この行が追加されていることを確認
 
 // WebSocket接続
 io.on("connection", (socket) => {

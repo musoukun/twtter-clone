@@ -31,6 +31,7 @@ const Profile: React.FC = () => {
 	const [profile, setProfile] = useState<UserProfile | null>(null);
 	const [posts, setPosts] = useState<UserPost[]>([]);
 	const [isFollowing, setIsFollowing] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -49,6 +50,7 @@ const Profile: React.FC = () => {
 				);
 			} catch (error) {
 				console.error("Error fetching profile:", error);
+				setError("Failed to load profile");
 			}
 		};
 
@@ -65,6 +67,7 @@ const Profile: React.FC = () => {
 				setPosts(res.data);
 			} catch (error) {
 				console.error("Error fetching posts:", error);
+				setError("Failed to load posts");
 			}
 		};
 
@@ -102,9 +105,11 @@ const Profile: React.FC = () => {
 			});
 		} catch (error) {
 			console.error("Error following/unfollowing user:", error);
+			setError("Failed to follow/unfollow user");
 		}
 	};
 
+	if (error) return <div className="text-red-500">{error}</div>;
 	if (!profile) return <div>Loading...</div>;
 
 	return (

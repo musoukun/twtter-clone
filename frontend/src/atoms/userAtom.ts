@@ -7,6 +7,7 @@ export interface User {
 	email: string;
 	profilePicture?: string;
 	following: string[];
+	avatar?: string;
 }
 
 export const userState = atom<User | null>({
