@@ -3,10 +3,33 @@ import { auth } from "../middleware/auth";
 import User from "../models/User";
 import Post from "../models/Post";
 import mongoose from "mongoose";
+import multer from "multer";
+import path from "path";
 
 interface AuthRequest extends Request {
 	userId?: string;
 }
+
+// Multer設定
+const storage = multer.diskStorage({
+	destination: function (
+		req: any,
+		file: any,
+		cb: (error: Error | null, destination: string) => void
+	) {
+		cb(null, path.join(__dirname, "..", "uploads")); // 正しいパスを設定
+	},
+	filename: function (
+		req: AuthRequest,
+		file: { fieldname: string; originalname: any },
+		cb: (error: Error | null, filename: string) => void
+	) {
+		const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+		const extname = path.extname(file.originalname);
+		const filename = `${req.userId}-${uniqueSuffix}${extname}`;
+		cb(null, filename);
+	},
+});
 
 const router = express.Router();
 
@@ -61,6 +84,7 @@ router.get("/recommended", auth, async (req: AuthRequest, res) => {
 router.get("/:id", auth, async (req: AuthRequest, res: Response) => {
 	try {
 		const user = await User.findById(req.params.id).select("-password");
+		console.log("User:", user);
 		if (!user) {
 			return res.status(404).json({ message: "User not found" });
 		}
@@ -147,10 +171,12 @@ router.post("/:id/unfollow", auth, async (req: AuthRequest, res: Response) => {
 		}
 
 		currentUser.following = currentUser.following.filter(
-			(id) => id.toString() !== userToUnfollow._id?.toString()
+			(id: { toString: () => any }) =>
+				id.toString() !== userToUnfollow._id?.toString()
 		);
 		userToUnfollow.followers = userToUnfollow.followers.filter(
-			(id) => id.toString() !== currentUser._id?.toString()
+			(id: { toString: () => any }) =>
+				id.toString() !== currentUser._id?.toString()
 		);
 
 		await currentUser.save();
@@ -174,5 +200,51 @@ router.get("/:id/posts", auth, async (req: AuthRequest, res: Response) => {
 		res.status(500).json({ message: "Server error" });
 	}
 });
+
+const upload = multer({
+	storage: storage,
+	fileFilter: function (
+		req: any,
+		file: { originalname: any; mimetype: string },
+		cb: multer.FileFilterCallback
+	) {
+		const fileTypes = /jpeg|jpg|png/;
+		const extname = fileTypes.test(
+			path.extname(file.originalname).toLowerCase()
+		);
+		const mimetype = fileTypes.test(file.mimetype);
+
+		if (extname && mimetype) {
+			return cb(null, true);
+		} else {
+			cb(new Error("Images only!"));
+		}
+	},
+});
+
+// アイコンアップロードエンドポイント
+router.post(
+	"/me/avatar",
+	auth,
+	upload.single("avatar"),
+	async (req: AuthRequest, res: Response) => {
+		try {
+			if (!req.userId) {
+				return res.status(401).json({ message: "Unauthorized" });
+			}
+			const user = await User.findById(req.userId);
+			if (!user) {
+				return res.status(404).json({ message: "User not found" });
+			}
+			if (req.file) {
+				user.avatar = `/uploads/${req.file.filename}`;
+			}
+			await user.save();
+			res.json({ avatar: user.avatar });
+		} catch (error) {
+			res.status(500).json({ message: "Server error" });
+		}
+	}
+);
 
 export default router;

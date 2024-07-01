@@ -3,11 +3,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useRecoilValue, useSetRecoilState } from "recoil";
-import { postsState } from "../atoms/userAtom";
+import { postsState, userState } from "../atoms/userAtom";
 import PostForm from "../components/PostForm";
 import Post from "../components/Post";
 import RecommendedUsers from "../components/RecommendedUsers";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { getCurrentUser, isAuthenticated } from "../services/authService";
 
 interface PostType {
@@ -25,11 +25,13 @@ const Home: React.FC = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const setPosts = useSetRecoilState(postsState);
-	const currentUser = getCurrentUser();
 	const posts = useRecoilValue(postsState) || [];
+	const navigate = useNavigate();
+	const setUser = useSetRecoilState(userState);
 
 	useEffect(() => {
 		const fetchPosts = async () => {
+			const currentUser = await getCurrentUser();
 			if (!currentUser) return;
 			try {
 				setLoading(true);
@@ -53,6 +55,16 @@ const Home: React.FC = () => {
 			}
 		};
 
+		const getUser = async () => {
+			const user = await getCurrentUser();
+			if (user) {
+				setUser(user as any);
+				console.log("avatar: " + user.avatar);
+				console.log("user: " + user);
+			}
+		};
+
+		getUser();
 		fetchPosts();
 	}, []);
 
@@ -74,7 +86,12 @@ const Home: React.FC = () => {
 				<h1 className="text-2xl font-bold mb-4">Home</h1>
 				<PostForm />
 				{posts.map((post: PostType) => (
-					<Post key={post._id} post={post} />
+					<div
+						key={post._id}
+						onClick={() => navigate(`/tweet/${post._id}`)}
+					>
+						<Post post={post} />
+					</div>
 				))}
 			</div>
 			<div className="w-1/4">

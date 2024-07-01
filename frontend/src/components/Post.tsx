@@ -58,7 +58,10 @@ const Post: React.FC<PostProps> = ({ post }) => {
 	};
 
 	return (
-		<div className="border p-4 mb-4 rounded">
+		<div
+			className="border p-4 mb-4 rounded"
+			onClick={() => navigate(`/tweet/${post._id}`)}
+		>
 			{post.author && post.author.username ? (
 				<p
 					className="font-bold cursor-pointer hover:underline"

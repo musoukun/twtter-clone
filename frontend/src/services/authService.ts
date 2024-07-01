@@ -5,6 +5,7 @@ import { jwtDecode } from "jwt-decode";
 const API_URL = "http://localhost:5000/api/auth";
 
 interface User {
+	avatar: any;
 	id: string;
 	username: string;
 	email: string;
@@ -62,7 +63,7 @@ export const logout = () => {
 	setAuthToken(null);
 };
 
-export const getCurrentUser = (): User | null => {
+export const getCurrentUser = async (): Promise<User | null> => {
 	const token = localStorage.getItem("token");
 	if (token) {
 		try {
@@ -71,9 +72,19 @@ export const getCurrentUser = (): User | null => {
 				logout();
 				return null;
 			}
-			return { id: decodedToken.userId, username: "", email: "" };
+			// トークンが有効な場合、バックエンドからユーザー情報を取得
+			const response = await axios.get<User>(
+				`http://localhost:5000/api/users/${decodedToken.userId}`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+			return response.data;
 		} catch (error) {
-			console.error("Error decoding token:", error);
+			console.error("Error decoding token or fetching user:", error);
+			logout();
 			return null;
 		}
 	}

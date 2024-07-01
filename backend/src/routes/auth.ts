@@ -86,6 +86,7 @@ router.get("/me", auth, async (req: AuthRequest, res) => {
 			username: user.username,
 			email: user.email,
 			following: user.following,
+			avater: user.avatar,
 		});
 	} catch (error) {
 		res.status(500).json({ message: "Server error" });

@@ -9,6 +9,7 @@ export interface IUser extends Document {
 	followers: mongoose.Types.ObjectId[];
 	following: mongoose.Types.ObjectId[];
 	comparePassword(candidatePassword: string): Promise<boolean>;
+	avatar?: string;
 }
 
 const UserSchema: Schema = new Schema(
@@ -19,6 +20,7 @@ const UserSchema: Schema = new Schema(
 		profilePicture: { type: String },
 		followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
 		following: [{ type: Schema.Types.ObjectId, ref: "User" }],
+		avatar: { type: String },
 	},
 	{ timestamps: true }
 );

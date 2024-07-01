@@ -8,6 +8,8 @@ import authRoutes from "./routes/auth";
 import postRoutes from "./routes/posts";
 import userRoutes from "./routes/users";
 import searchRoutes from "./routes/search";
+import path from "path";
+import fs from "fs";
 
 const app = express();
 const httpServer = createServer(app);
@@ -17,7 +19,18 @@ const io = new Server(httpServer, {
 		methods: ["GET", "POST"],
 	},
 });
+
+// uploadsディレクトリが存在しない場合は作成
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+	fs.mkdirSync(uploadsDir);
+}
+
+// 静的ファイルを提供するための設定（アップロードされたファイルを提供するため）
+app.use("/uploads", express.static(uploadsDir));
+
 dotenv.config(); // Load environment variables from .env file
+
 app.use(cors());
 app.use(express.json());
 
