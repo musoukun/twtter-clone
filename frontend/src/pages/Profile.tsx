@@ -22,7 +22,7 @@ interface UserPost {
 		username: string;
 	};
 	likes: string[];
-	comments: any[];
+	replies: any[];
 }
 
 const Profile: React.FC = () => {

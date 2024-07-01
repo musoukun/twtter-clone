@@ -1,3 +1,144 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.tweet-detail {
+  background-color: #000;
+  color: #fff;
+  padding: 1rem;
+  border-bottom: 1px solid #333;
+}
+
+.tweet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #fff;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.username {
+  font-weight: bold;
+}
+
+.tweet-content {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.tweet-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.like-button {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.like-button.liked {
+  color: #e0245e;
+}
+
+.reply-area {
+  margin-top: 1rem;
+}
+
+.reply-area textarea {
+  width: 100%;
+  min-height: 100px;
+  background-color: #000;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.reply-area button {
+  background-color: #1da1f2;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.tweet-menu {
+  position: relative;
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: #000;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.menu-dropdown button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.menu-dropdown button:hover {
+  background-color: #1da1f2;
+}
+
+
+.tweet:hover {
+  background-color: #1a1a1a;
+}
+
+.like-button {
+  transition: transform 0.2s ease;
+}
+
+.like-button:hover {
+  transform: scale(1.1);
+}
+
+.loading .spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

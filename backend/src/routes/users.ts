@@ -10,6 +10,53 @@ interface AuthRequest extends Request {
 
 const router = express.Router();
 
+// 推奨ユーザーの取得
+router.get("/recommended", auth, async (req: AuthRequest, res) => {
+	try {
+		if (!req.userId) {
+			console.error("User ID not found in request");
+			return res
+				.status(401)
+				.json({ message: "User ID not found in request" });
+		}
+
+		const currentUser = await User.findById(req.userId);
+		if (!currentUser) {
+			return res.status(404).json({ message: "User not found" });
+		}
+
+		console.log("Current User ID:", currentUser._id);
+
+		const recommendedUsers = await User.aggregate([
+			{
+				$match: {
+					_id: {
+						$ne: new mongoose.Types.ObjectId(
+							currentUser._id as any
+						),
+					},
+				},
+			},
+			{ $sample: { size: 5 } },
+			{ $project: { _id: 1, username: 1 } },
+		]);
+
+		console.log("Recommended Users:", recommendedUsers);
+
+		res.json(recommendedUsers);
+	} catch (error: any) {
+		console.error("Error fetching recommended users:", error);
+		res.status(500).json({
+			message: "Server error",
+			error: error.message,
+			stack:
+				process.env.NODE_ENV === "development"
+					? error.stack
+					: undefined,
+		});
+	}
+});
+
 // ユーザープロフィールの取得
 router.get("/:id", auth, async (req: AuthRequest, res: Response) => {
 	try {
@@ -124,26 +171,6 @@ router.get("/:id/posts", auth, async (req: AuthRequest, res: Response) => {
 			.populate("author", "username");
 		res.json(posts);
 	} catch (error) {
-		res.status(500).json({ message: "Server error" });
-	}
-});
-
-router.get("/recommended", auth, async (req: AuthRequest, res) => {
-	try {
-		const currentUser = await User.findById(req.userId);
-		if (!currentUser) {
-			return res.status(404).json({ message: "User not found" });
-		}
-
-		const recommendedUsers = await User.aggregate([
-			{ $match: { _id: { $ne: currentUser._id } } },
-			{ $sample: { size: 5 } },
-			{ $project: { _id: 1, username: 1 } },
-		]);
-
-		res.json(recommendedUsers);
-	} catch (error) {
-		console.error("Error fetching recommended users:", error);
 		res.status(500).json({ message: "Server error" });
 	}
 });

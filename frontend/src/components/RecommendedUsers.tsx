@@ -15,10 +15,13 @@ const RecommendedUsers: React.FC = () => {
 		const fetchRecommendedUsers = async () => {
 			try {
 				const token = localStorage.getItem("token");
+				console.log(token);
 				const response = await axios.get(
 					"http://localhost:5000/api/users/recommended",
 					{
-						headers: { Authorization: `Bearer ${token}` },
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
 					}
 				);
 				setUsers(response.data);
@@ -26,7 +29,6 @@ const RecommendedUsers: React.FC = () => {
 				console.error("Error fetching recommended users:", error);
 			}
 		};
-
 		fetchRecommendedUsers();
 	}, []);
 

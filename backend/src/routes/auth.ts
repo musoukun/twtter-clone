@@ -3,8 +3,18 @@ import jwt from "jsonwebtoken";
 import User from "../models/User";
 import { auth } from "../middleware/auth";
 import { Request } from "express";
+import dotenv from "dotenv";
+
+dotenv.config(); // Load environment variables from .env file
 
 const router = express.Router();
+
+const JWT_SECRET =
+	"97f70a0c030394ecb183c4e92443c55d57d7dfd0dba67e895df6171d1cb3557c";
+
+if (!JWT_SECRET) {
+	throw new Error("JWT_SECRET is not defined in environment variables");
+}
 
 interface AuthRequest extends Request {
 	userId?: string;
@@ -19,11 +29,9 @@ router.post("/register", async (req, res) => {
 		}
 		user = new User({ username, email, password, following: [] });
 		await user.save();
-		const token = jwt.sign(
-			{ userId: user._id },
-			process.env.JWT_SECRET || "your_jwt_secret",
-			{ expiresIn: "1d" }
-		);
+		const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
+			expiresIn: "1d",
+		});
 		res.status(201).json({
 			token,
 			user: {
@@ -50,11 +58,9 @@ router.post("/login", async (req, res) => {
 		if (!isMatch) {
 			return res.status(400).json({ message: "Invalid credentials" });
 		}
-		const token = jwt.sign(
-			{ userId: user._id },
-			process.env.JWT_SECRET || "your_jwt_secret",
-			{ expiresIn: "1d" }
-		);
+		const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
+			expiresIn: "1d",
+		});
 		res.json({
 			token,
 			user: {

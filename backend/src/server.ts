@@ -8,7 +8,6 @@ import authRoutes from "./routes/auth";
 import postRoutes from "./routes/posts";
 import userRoutes from "./routes/users";
 import searchRoutes from "./routes/search";
-dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
@@ -18,7 +17,7 @@ const io = new Server(httpServer, {
 		methods: ["GET", "POST"],
 	},
 });
-
+dotenv.config(); // Load environment variables from .env file
 app.use(cors());
 app.use(express.json());
 

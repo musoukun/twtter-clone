@@ -1,18 +1,20 @@
 import express from "express";
+import mongoose, { Document, ObjectId } from "mongoose";
 import { AuthRequest, auth } from "../middleware/auth";
-import Post from "../models/Post";
-import User from "../models/User";
+import Post, { IPost } from "../models/Post";
+import User, { IUser } from "../models/User";
 
 const router = express.Router();
 
 // 投稿の作成
-router.post("/", auth, async (req: any, res) => {
+router.post("/", auth, async (req: AuthRequest, res) => {
 	try {
 		const newPost = new Post({
 			content: req.body.content,
-			author: req.userId,
+			author: req.userId as ObjectId | string,
 		});
 		const post = await newPost.save();
+		await post.populate("author", "username");
 		res.status(201).json(post);
 	} catch (error) {
 		res.status(500).json({ message: "Server error" });
@@ -31,40 +33,20 @@ router.get("/", async (req, res) => {
 	}
 });
 
-// いいね機能
-router.post("/:id/like", auth, async (req: any, res) => {
-	try {
-		const post = await Post.findById(req.params.id);
-		if (!post) {
-			return res.status(404).json({ message: "Post not found" });
-		}
-		if (post.likes.includes(req.userId)) {
-			post.likes = post.likes.filter(
-				(id) => id.toString() !== req.userId
-			);
-		} else {
-			post.likes.push(req.userId);
-		}
-		await post.save();
-		res.json(post);
-	} catch (error) {
-		res.status(500).json({ message: "Server error" });
-	}
-});
-
 // コメントの追加
-router.post("/:id/comment", auth, async (req: any, res) => {
+router.post("/:id/comment", auth, async (req: AuthRequest, res) => {
 	try {
 		const post = await Post.findById(req.params.id);
 		if (!post) {
 			return res.status(404).json({ message: "Post not found" });
 		}
-		post.comments.push({
+		post.replies.push({
 			content: req.body.content,
-			author: req.userId,
+			author: req.userId as any,
 			createdAt: new Date(),
 		});
 		await post.save();
+		await post.populate("author", "username");
 		res.json(post);
 	} catch (error) {
 		res.status(500).json({ message: "Server error" });
@@ -74,6 +56,7 @@ router.post("/:id/comment", auth, async (req: any, res) => {
 // タイムラインの投稿を取得
 router.get("/timeline", auth, async (req: AuthRequest, res) => {
 	try {
+		console.log(req.userId);
 		const currentUser = await User.findById(req.userId);
 		const currentUserId: any = currentUser?._id;
 
@@ -82,12 +65,14 @@ router.get("/timeline", auth, async (req: AuthRequest, res) => {
 		}
 
 		const followingIds = currentUser.following;
-		followingIds.push(currentUserId); // 自身の投稿も含める
+		followingIds.push(currentUserId);
 
 		const posts = await Post.find({ author: { $in: followingIds } })
 			.sort({ createdAt: -1 })
 			.populate("author", "username")
-			.limit(50); // 最新の50件に制限
+			.limit(50);
+
+		console.log(posts);
 
 		res.json(posts);
 	} catch (error) {
@@ -96,21 +81,74 @@ router.get("/timeline", auth, async (req: AuthRequest, res) => {
 	}
 });
 
-// 新しい投稿を作成
-router.post("/", auth, async (req: AuthRequest, res) => {
+// Tweet詳細の取得
+router.get("/:id", auth, async (req: AuthRequest, res) => {
 	try {
-		const newPost = new Post({
-			content: req.body.content,
-			author: req.userId,
-		});
-		const savedPost = await newPost.save();
-		const populatedPost = await Post.findById(savedPost._id).populate(
+		const post = await Post.findById(req.params.id).populate(
 			"author",
 			"username"
 		);
-		res.status(201).json(populatedPost);
+		if (!post) {
+			return res.status(404).json({ message: "Tweet not found" });
+		}
+		res.json(post);
 	} catch (error) {
-		console.error("Error creating post:", error);
+		console.error("Error fetching tweet:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+// いいね機能の更新
+router.post("/:id/like", auth, async (req: AuthRequest, res) => {
+	try {
+		const post = await Post.findById(req.params.id);
+		if (!post) {
+			return res.status(404).json({ message: "Tweet not found" });
+		}
+
+		const userId = req.userId as any;
+		const likeIndex = post.likes.indexOf(userId);
+		if (likeIndex > -1) {
+			post.likes.splice(likeIndex, 1);
+		} else {
+			post.likes.push(userId);
+		}
+
+		await post.save();
+		await post.populate("author", "username");
+		res.json(post);
+	} catch (error) {
+		console.error("Error liking/unliking tweet:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+// 返信機能
+router.post("/:id/reply", auth, async (req: AuthRequest, res) => {
+	try {
+		const { content } = req.body;
+		const post = await Post.findById(req.params.id);
+
+		if (!post) {
+			return res.status(404).json({ message: "Tweet not found" });
+		}
+
+		const reply = {
+			content,
+			author: req.userId as any,
+			createdAt: new Date(),
+		};
+
+		if (!post.replies) {
+			post.replies = [];
+		}
+		post.replies.push(reply);
+		await post.save();
+		await post.populate("author", "username");
+
+		res.status(201).json(reply);
+	} catch (error) {
+		console.error("Error replying to tweet:", error);
 		res.status(500).json({ message: "Server error" });
 	}
 });

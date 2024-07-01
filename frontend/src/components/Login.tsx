@@ -1,29 +1,31 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useSetRecoilState } from "recoil";
-import { userState } from "../atoms/userAtom";
+import { User, userState } from "../atoms/userAtom";
 import { login } from "../services/authService";
 
 const Login: React.FC = () => {
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const navigate = useNavigate();
 	const setUser = useSetRecoilState(userState);
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		try {
-			const data = await login(email, password);
-			if (data.token) {
-				localStorage.setItem("token", data.token);
-				setUser(data.user);
-				navigate("/");
-			} else {
-				setError("Login failed. Please try again.");
-			}
-		} catch (err) {
-			setError("Invalid credentials");
+			console.log("Attempting login...");
+			const user: User | null | any = await login(email, password);
+			console.log("Login successful, user:", user);
+			setUser(user);
+			console.log("User state updated, navigating to home...");
+			navigate("/");
+			console.log("Navigation called");
+		} catch (err: any) {
+			console.error("Login error:", err);
+			setError(err.message || "Login failed");
 		}
 	};
 
@@ -78,6 +80,15 @@ const Login: React.FC = () => {
 					>
 						Sign In
 					</button>
+				</div>
+				<div className="mt-4 text-center">
+					<span className="text-gray-700 text-sm">初めての方は</span>
+					<Link
+						to="/register"
+						className="text-blue-500 hover:text-blue-700 text-sm font-bold ml-2"
+					>
+						ここをクリックしてアカウントを作成してください。
+					</Link>
 				</div>
 			</form>
 		</div>

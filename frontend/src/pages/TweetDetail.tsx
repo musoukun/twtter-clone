@@ -12,7 +12,7 @@ interface Tweet {
 		username: string;
 	};
 	likes: string[];
-	comments: any[];
+	replies: any[];
 }
 
 interface Mention {

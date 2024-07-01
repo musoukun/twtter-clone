@@ -5,6 +5,15 @@ import { postsState } from "../atoms/userAtom";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+interface Reply {
+	_id: string;
+	content: string;
+	author: {
+		_id: string;
+		username: string;
+	};
+}
+
 interface PostProps {
 	post: {
 		_id: string;
@@ -14,14 +23,7 @@ interface PostProps {
 			username: string;
 		};
 		likes: string[];
-		comments: {
-			_id: string;
-			content: string;
-			author: {
-				_id: string;
-				username: string;
-			};
-		}[];
+		replies: Reply[];
 	};
 }
 
@@ -57,12 +59,16 @@ const Post: React.FC<PostProps> = ({ post }) => {
 
 	return (
 		<div className="border p-4 mb-4 rounded">
-			<p
-				className="font-bold cursor-pointer hover:underline"
-				onClick={() => navigate(`/profile/${post.author._id}`)}
-			>
-				{post.author.username}
-			</p>
+			{post.author && post.author.username ? (
+				<p
+					className="font-bold cursor-pointer hover:underline"
+					onClick={() => navigate(`/profile/${post.author._id}`)}
+				>
+					{post.author.username}
+				</p>
+			) : (
+				<p className="text-gray-500">Unknown Author</p>
+			)}
 			<p>{post.content}</p>
 			<div className="mt-2">
 				<motion.button
@@ -80,7 +86,28 @@ const Post: React.FC<PostProps> = ({ post }) => {
 					</motion.span>
 				</motion.button>
 				<span>{post.likes.length}</span>
-				<span className="ml-4">Comments: {post.comments.length}</span>
+				<span className="ml-4">Replies: {post.replies.length}</span>
+			</div>
+			<div className="mt-2">
+				{post.replies.length > 0 ? (
+					post.replies.map((reply) => (
+						<div key={reply._id} className="mt-2">
+							{reply.author && reply.author.username ? (
+								<p className="font-semibold">
+									{reply.author.username}
+								</p>
+							) : (
+								<p className="text-gray-500">Unknown Author</p>
+							)}
+							<p>{reply.content}</p>
+							<p className="text-xs text-gray-500">
+								Length: {reply.content.length} characters
+							</p>
+						</div>
+					))
+				) : (
+					<p className="text-gray-500">No replies yet.</p>
+				)}
 			</div>
 		</div>
 	);

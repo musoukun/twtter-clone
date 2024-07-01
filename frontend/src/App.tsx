@@ -1,66 +1,73 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect } from "react";
+import {
+	BrowserRouter as Router,
+	Routes,
+	Route,
+	Navigate,
+} from "react-router-dom";
 import { RecoilRoot, useSetRecoilState } from "recoil";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import axios from "axios";
-import Sidebar from "./components/Sidebar";
+import { userState } from "./atoms/userAtom";
+import RootLayout from "./components/RootLayout";
 import Home from "./pages/Home";
-import Profile from "./pages/Profile";
 import Login from "./components/Login";
 import Register from "./components/Register";
+import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Notifications from "./pages/Notifications";
-import TweetDetail from "./pages/TweetDetail";
-import { userState } from "./atoms/userAtom";
+import { getCurrentUser } from "./services/authService";
 
-const AppContent: React.FC = () => {
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+// import axios from "axios";
+
+const InitializeUser = () => {
 	const setUser = useSetRecoilState(userState);
 
 	useEffect(() => {
-		const fetchUser = async () => {
-			const token = localStorage.getItem("token");
-			if (token) {
-				try {
-					const response = await axios.get(
-						"http://localhost:5000/api/auth/me",
-						{
-							headers: { Authorization: `Bearer ${token}` },
-						}
-					);
-					setUser(response.data);
-				} catch (error) {
-					console.error("Error fetching user:", error);
-					localStorage.removeItem("token");
-				}
-			}
-		};
-
-		fetchUser();
+		const user = getCurrentUser();
+		if (user) {
+			setUser(user as any);
+		}
 	}, [setUser]);
 
-	return (
-		<div className="flex">
-			<Sidebar />
-			<main className="flex-1 p-4">
-				<Routes>
-					<Route path="/" element={<Home />} />
-					<Route path="/profile/:userId" element={<Profile />} />
-					<Route path="/login" element={<Login />} />
-					<Route path="/register" element={<Register />} />
-					<Route path="/search" element={<Search />} />
-					<Route path="/notifications" element={<Notifications />} />
-					<Route path="/tweet/:tweetId" element={<TweetDetail />} />
-				</Routes>
-			</main>
-		</div>
-	);
+	return null;
 };
+
+// axios.interceptors.request.use(
+// 	(config) => {
+// 		const token = localStorage.getItem("token");
+// 		if (token) {
+// 			config.headers["Authorization"] = `Bearer ${token}`;
+// 		}
+// 		return config;
+// 	},
+// 	(error) => {
+// 		return Promise.reject(error);
+// 	}
+// );
 
 const App: React.FC = () => {
 	return (
 		<RecoilRoot>
+			<InitializeUser />
 			<Router>
-				<AppContent />
+				<Routes>
+					<Route path="/login" element={<Login />} />
+					<Route path="/register" element={<Register />} />
+					<Route path="/" element={<RootLayout />}>
+						<Route index element={<Home />} />
+						<Route path="profile/:userId" element={<Profile />} />
+						<Route path="search" element={<Search />} />
+						<Route
+							path="notifications"
+							element={<Notifications />}
+						/>
+					</Route>
+					<Route path="*" element={<Navigate to="/" replace />} />
+				</Routes>
 			</Router>
+			<ToastContainer position="bottom-right" autoClose={3000} />
 		</RecoilRoot>
 	);
 };
